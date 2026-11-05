@@ -8,6 +8,10 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/inscription', [AuthController::class, 'register'])->middleware('guest')->name('admin.register');
+Route::post('/inscription', [AuthController::class, 'storeRegistration'])
+    ->middleware(['guest', 'throttle:5,1'])
+    ->name('admin.register.store');
 Route::get('/connexion', [AuthController::class, 'create'])->middleware('guest')->name('login');
 Route::post('/connexion', [AuthController::class, 'store'])->middleware(['guest', 'throttle:5,1']);
 Route::post('/deconnexion', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');

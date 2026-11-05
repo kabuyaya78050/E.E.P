@@ -23,6 +23,9 @@
 
             <button class="btn btn-gold btn-block" type="submit">Se connecter</button>
         </form>
+        @if ($registrationAvailable)
+            <p class="hint"><a href="{{ route('admin.register') }}">Créer le premier compte administrateur</a></p>
+        @endif
     </div>
 </section>
 @endsection

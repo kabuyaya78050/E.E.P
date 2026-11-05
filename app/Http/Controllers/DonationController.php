@@ -13,6 +13,13 @@ class DonationController extends Controller
 {
     public function create(Request $request)
     {
+        $mode = config('services.labyrinthe.mode');
+        $paymentAvailable = in_array($mode, ['sandbox', 'live'], true)
+            && filled(config('services.labyrinthe.token'))
+            && filled(config('services.labyrinthe.merchant'))
+            && filled(config('services.labyrinthe.gateway'))
+            && ($mode !== 'live' || filled(config('services.labyrinthe.check_gateway')));
+
         $submissionKey = $request->session()->get('donation_submission_key');
         if ($submissionKey && Donation::where('submission_key', $submissionKey)->where('status', 'paid')->exists()) {
             $request->session()->forget('donation_submission_key');
@@ -22,7 +29,10 @@ class DonationController extends Controller
         $submissionKey ??= (string) Str::uuid();
         $request->session()->put('donation_submission_key', $submissionKey);
 
-        return view('donate.create', ['submissionKey' => $submissionKey]);
+        return view('donate.create', [
+            'submissionKey' => $submissionKey,
+            'paymentAvailable' => $paymentAvailable,
+        ]);
     }
 
     public function store(Request $request, LabyrinthePay $pay)

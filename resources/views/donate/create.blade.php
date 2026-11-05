@@ -18,13 +18,17 @@
             </div>
         @endif
 
-        @if (config('services.labyrinthe.mode') === 'sandbox')
+        @if (config('services.labyrinthe.mode') === 'sandbox' && $paymentAvailable)
             <div class="alert alert-wait" role="status">
                 Mode de test Labyrinthe actif : aucun paiement réel ne sera prélevé.
             </div>
+        @elseif (config('services.labyrinthe.mode') === 'live' && $paymentAvailable)
+            <div class="alert alert-wait" role="status">
+                Paiement Mobile Money actif. La confirmation dépend de l’opérateur.
+            </div>
         @else
             <div class="alert alert-error" role="alert">
-                Le paiement en production n’est pas activé tant que Labyrinthe n’a pas confirmé les paramètres officiels de son API live.
+                Le paiement est désactivé : vérifiez la configuration Labyrinthe et les URL de gateway fournies par FlexPay.
             </div>
         @endif
 
@@ -67,8 +71,8 @@
                 </div>
             </div>
 
-            <button class="btn btn-gold btn-block" type="submit" @disabled(config('services.labyrinthe.mode') !== 'sandbox')>
-                {{ config('services.labyrinthe.mode') === 'sandbox' ? 'Tester la demande Labyrinthe' : 'Paiement désactivé' }}
+            <button class="btn btn-gold btn-block" type="submit" @disabled(! $paymentAvailable)>
+                {{ ! $paymentAvailable ? 'Paiement désactivé' : (config('services.labyrinthe.mode') === 'sandbox' ? 'Tester la demande Labyrinthe' : 'Payer par Mobile Money') }}
             </button>
             @if (config('services.labyrinthe.mode') === 'sandbox')
                 <p class="hint">Le sandbox vérifie la connexion API; il ne simule pas le débit auprès des opérateurs Mobile Money.</p>

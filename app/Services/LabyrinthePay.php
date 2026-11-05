@@ -36,7 +36,7 @@ class LabyrinthePay
         $token = (string) config('services.labyrinthe.token');
         try {
             $response = Http::acceptJson()
-                ->withHeaders(['token' => $token])
+                ->withToken($token)
                 ->connectTimeout(5)
                 ->timeout(20)
                 ->post($gateway, $payload);
@@ -154,10 +154,10 @@ class LabyrinthePay
             ];
         }
 
-        if (config('services.labyrinthe.mode') !== 'sandbox') {
+        if (blank(config('services.labyrinthe.merchant'))) {
             return [
                 'success' => false,
-                'message' => 'La documentation sans merchant couvre le mode sandbox uniquement; les paramètres live doivent être confirmés par Labyrinthe.',
+                'message' => 'Configuration Labyrinthe incomplète : renseignez LABYRINTHE_MERCHANT avec le code marchand fourni par FlexPay.',
             ];
         }
 
@@ -168,10 +168,29 @@ class LabyrinthePay
             ];
         }
 
+        $mode = config('services.labyrinthe.mode');
+        if (! in_array($mode, ['sandbox', 'live'], true)) {
+            return [
+                'success' => false,
+                'message' => 'Configuration Labyrinthe invalide : LABYRINTHE_MODE doit être sandbox ou live.',
+            ];
+        }
+
+        if ($mode === 'live' && blank(config('services.labyrinthe.check_gateway'))) {
+            return [
+                'success' => false,
+                'message' => 'Configuration live incomplète : renseignez LABYRINTHE_CHECK_GATEWAY avant d’activer les paiements.',
+            ];
+        }
+
         return $this->request(config('services.labyrinthe.gateway'), [
-            'token' => config('services.labyrinthe.token'),
+            'merchant' => config('services.labyrinthe.merchant'),
+            'type' => 1,
             'reference' => $donation->reference,
             'phone' => $donation->phone,
+            'amount' => (float) $donation->amount,
+            'currency' => $donation->currency,
+            'callbackUrl' => route('don.callback', ['reference' => $donation->reference]),
         ]);
     }
 
@@ -199,7 +218,6 @@ class LabyrinthePay
         }
 
         return $this->request(config('services.labyrinthe.check_gateway'), [
-            'token' => config('services.labyrinthe.token'),
             'orderNumber' => $donation->order_number,
         ]);
     }

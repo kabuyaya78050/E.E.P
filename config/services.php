@@ -38,6 +38,7 @@ return [
     'labyrinthe' => [
         'mode' => env('LABYRINTHE_MODE', 'sandbox'),
         'token' => env('LABYRINTHE_TOKEN'),
+        'merchant' => env('LABYRINTHE_MERCHANT'),
         'gateway' => env('LABYRINTHE_GATEWAY'),
         'check_gateway' => env('LABYRINTHE_CHECK_GATEWAY'),
     ],

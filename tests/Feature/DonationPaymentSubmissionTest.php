@@ -14,7 +14,12 @@ class DonationPaymentSubmissionTest extends TestCase
 
     public function test_sandbox_donation_form_warns_that_it_does_not_collect_real_payments(): void
     {
-        config(['services.labyrinthe.mode' => 'sandbox']);
+        config([
+            'services.labyrinthe.mode' => 'sandbox',
+            'services.labyrinthe.token' => 'test-api-token',
+            'services.labyrinthe.merchant' => 'Orange',
+            'services.labyrinthe.gateway' => 'https://payment.example.test/',
+        ]);
         $submissionKey = (string) Str::uuid();
         $this->withSession(['donation_submission_key' => $submissionKey]);
 
@@ -33,11 +38,31 @@ class DonationPaymentSubmissionTest extends TestCase
         ], false);
     }
 
+    public function test_donation_form_disables_payment_when_merchant_configuration_is_missing(): void
+    {
+        config([
+            'services.labyrinthe.mode' => 'sandbox',
+            'services.labyrinthe.token' => 'test-api-token',
+            'services.labyrinthe.merchant' => null,
+            'services.labyrinthe.gateway' => 'https://payment.example.test/',
+        ]);
+        $submissionKey = (string) Str::uuid();
+        $this->withSession(['donation_submission_key' => $submissionKey]);
+
+        $response = $this->get(route('don.create'));
+
+        $response->assertOk();
+        $response->assertSee('Le paiement est désactivé');
+        $response->assertSee('disabled', false);
+        $response->assertDontSee('Mode de test Labyrinthe actif');
+    }
+
     public function test_repeated_form_submission_sends_only_one_labyrinthe_request(): void
     {
         config([
             'services.labyrinthe.mode' => 'sandbox',
             'services.labyrinthe.token' => 'test-api-token',
+            'services.labyrinthe.merchant' => 'Orange',
             'services.labyrinthe.gateway' => 'https://payment.example.test/',
         ]);
 
